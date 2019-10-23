@@ -15,8 +15,6 @@ extern "C" {
 #endif
 
 #define MAX_DECODED_PACKET_LEN (512)
-    
-#define MAX_ENCODED_PACKET_LEN (1026) /* Since Maximum Decoded length is 512. So maximum encoded length is : 2 * decoded length (assuminng if all bytes STX/ETX/DEL) + 1 (for STX) + 1 (for ETX) */
 
 #define STX     0x02
 #define ETX     0x03

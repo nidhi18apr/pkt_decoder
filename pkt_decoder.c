@@ -14,11 +14,10 @@ struct pkt_decoder {
     pkt_read_fn_t   callback; /* callback for printing / processing decoded data */
     void *          callback_ctx; /* context for passing parameters to callback function */
     uint8_t         decoded_frame[MAX_DECODED_PACKET_LEN]; /* Decoded data   */
-    uint8_t         encoded_frame[MAX_ENCODED_PACKET_LEN ] ; /* Input / Encoded data */
-    int             curr_stx_index; /* current stx index in decoder array */
+    int             curr_stx_index; /* index of last STX byte found in decoder array */
     int             current_decoder_index; /* current index in decoder array */
     int             stx_found ; /* set after STX byte is found */
-    int             last_byte_was_DLE ;
+    int             last_byte_was_DLE ;  /* set if previous byte was DLE*/
 } ;
 
 
@@ -26,7 +25,7 @@ struct pkt_decoder {
 pkt_decoder_t* pkt_decoder_create(pkt_read_fn_t callback, void *callback_ctx){
     assert(callback); // Callback should not be NULL
     // Allocate Memory and initialize parameters
-    pkt_decoder_t* decoder = ( pkt_decoder_t* )calloc(1, sizeof(pkt_decoder_t));
+    pkt_decoder_t* decoder = ( pkt_decoder_t* )calloc(1, sizeof(pkt_decoder_t)); /* Everything set to 0 */
     decoder->callback = callback ;
     decoder->callback_ctx = callback_ctx ;
     return decoder ;
@@ -43,12 +42,12 @@ void pkt_decoder_destroy(pkt_decoder_t *decoder){
  * @fn        get_decoded_byte
  * @param     enc_byte   encoded byte
  * @brief     This function returns decoded byte.
- *              Encoding algorithm :If an 0x02 , 0x03 , 0x10 appears inside a packet it is escaped with  (0x10, 0x20 | value)
- *                                  So replace 0x02 with 0x10 , 0x22
- *                                             0x03 with 0x10 , 0x23
- *                                             0x10 with 0x10 , 0x30
- *              get_decoded_byte is returning corresponding decoded byte.
- *@return       decoded byte.
+ *            Encoding algorithm :If an 0x02 , 0x03 , 0x10 appears inside a packet it is escaped with  (0x10, 0x20 | value)
+ *                                  So replace 0x02 with { 0x10 , 0x22 }
+ *                                             0x03 with { 0x10 , 0x23 }
+ *                                             0x10 with { 0x10 , 0x30 }
+ *            get_decoded_byte is doing reverse of above encoding algo. Its returning corresponding decoded byte.
+ *@return     decoded byte.
  *************************************************************************************************************/
 uint8_t get_decoded_byte(uint8_t enc_byte){
     uint8_t dec_byte ;
@@ -83,7 +82,7 @@ uint8_t get_decoded_byte(uint8_t enc_byte){
  *                      1.2.2 Recurse algorithm for left over bytes if any
  *                1.3 If stx_found is true , decode bytes
  *                      1.3.1 if current byte is DLE , set  last_byte_was_DLE = TRUE
- *                      1.3.2 if last_byte_was_DLE is TRUE, then decode byte
+ *                      1.3.2 if last_byte_was_DLE is TRUE, then decode current byte
  *                               1.3.1.1 If its 0x22 , set decoded byte to 0x02
  *                               1.3.1.2 If its 0x23 , set decoded byte to 0x03
  *                               1.3.1.3 If its 0x30 , set decoded byte to 0x10
@@ -96,7 +95,7 @@ void pkt_decoder_write_bytes(pkt_decoder_t *decoder, size_t len, const uint8_t *
     assert(decoder->callback);
     assert(data);
     
-    for (int data_index = 0; (data_index < len) && (decoder->current_decoder_index <= MAX_DECODED_PACKET_LEN); data_index++) {
+    for (int data_index = 0; data_index < len ; data_index++) {
        
         if (data[data_index] == STX) { /* Step 1.1 */
             decoder->stx_found = TRUE;
@@ -109,13 +108,14 @@ void pkt_decoder_write_bytes(pkt_decoder_t *decoder, size_t len, const uint8_t *
             decoder->callback(decoder->callback_ctx , (decoder->current_decoder_index - decoder->curr_stx_index),&(decoder->decoded_frame[decoder->curr_stx_index]));
             // Reset stx_found
             decoder->stx_found = FALSE ;
+             decoder->last_byte_was_DLE = FALSE ; // Assuming 0x10 can be included .
             // Recurse function for left over data if any
             if (data_index < len ) {
                 pkt_decoder_write_bytes(decoder , len - data_index , &data[data_index]);
             }
             break ;
         }
-        if ( decoder->stx_found == TRUE) { /* Step 1.3 */
+        if (( decoder->stx_found == TRUE) && (decoder->current_decoder_index < MAX_DECODED_PACKET_LEN)) { /* Step 1.3 */
             if ((data[data_index] == DLE)){
                     decoder->last_byte_was_DLE = TRUE ;
             }

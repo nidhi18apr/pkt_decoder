@@ -20,51 +20,75 @@ static void pkt_printer(void *ctx, size_t len, const uint8_t *data) {
     printf("\n");
     
 }
+static void input_pkt_printer(size_t len, const uint8_t *data) {
+    printf("\nInput (%zd bytes) -", len);
+    for(size_t i = 0; i < len; i++)
+    {
+        printf(" %02x", data[i]);
+    }
+    printf("\n");
+    
+}
 
 void test_case_1(){
     const uint8_t pkt1[] = {0x02,0x11,0x12,0x13,0x14,0x15,0x03 };
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 
 void test_case_2(){
+    printf("\n----------  %s -------------" , __FUNCTION__);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, 0, 0);
     pkt_decoder_destroy(decoder);
 }
 void test_case_3(){
     const uint8_t pkt1[] = {0x02};
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 void test_case_4(){
     const uint8_t pkt1[] = {0x03};
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 void test_case_5(){
     const uint8_t pkt1[] = {0x09};
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 void test_case_6(){
     const uint8_t pkt1[] = {0x02,0x03};
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 void test_case_7(){
     const uint8_t pkt1[] = {0x02,0x11,0x03 };
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
 }
 void test_case_8(){
     const uint8_t pkt1[] = {0x02,0x11,0x12,0x13,0x14,0x15,0x30 };
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
@@ -72,10 +96,12 @@ void test_case_8(){
 void test_case_9(){
     uint8_t pkt1[MAX_DECODED_PACKET_LEN+2] ;
     pkt1[0] = 0x02 ;
-    pkt1[MAX_DECODED_PACKET_LEN +1] = 0x03 ;
-    for (int i = 1 ; i<MAX_DECODED_PACKET_LEN +1; i++) {
+    pkt1[MAX_DECODED_PACKET_LEN + 1 ] = 0x03 ;
+    for (int i = 1 ; i<MAX_DECODED_PACKET_LEN + 1; i++) {
         pkt1[i] = 0x12 ;
     }
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
@@ -85,7 +111,11 @@ void test_case_10(){
     const uint8_t pkt2[] = {0x45,0x03,0x02, 0x6, 0x34, 0x45, 0x03 , 0x21 , 0x02, 0xFa, 0x24, 0x45, 0x03 };
     const uint8_t pkt3[] = {0x02, 0x06,0x05,  0x04, 0x10};
     const uint8_t pkt4[] = {0x30, 0x45, 0x03 };
-    
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
+    input_pkt_printer( sizeof(pkt2), pkt2);
+    input_pkt_printer( sizeof(pkt3), pkt3);
+    input_pkt_printer( sizeof(pkt4), pkt4);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_write_bytes(decoder, sizeof(pkt2), pkt2);
@@ -96,7 +126,8 @@ void test_case_10(){
 // Wrong byte after 0x10
 void test_case_11(){
     const uint8_t pkt1[] = {0x02, 0xFF, 0x10, 0x25, 0x45, 0x03};
-    
+    printf("\n----------  %s -------------" , __FUNCTION__);
+    input_pkt_printer( sizeof(pkt1), pkt1);
     pkt_decoder_t* decoder = pkt_decoder_create(pkt_printer, NULL);
     pkt_decoder_write_bytes(decoder, sizeof(pkt1), pkt1);
     pkt_decoder_destroy(decoder);
